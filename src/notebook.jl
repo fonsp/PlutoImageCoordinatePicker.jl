@@ -35,11 +35,17 @@ struct ClickCoordinate
 	y::Float64
 end
 
+# ╔═╡ a9d84510-0aeb-45ee-80e0-3caa227e05a3
+ImageCoordinatePicker(url::String; kwargs...) = ImageCoordinatePicker(; kwargs..., img_url=url)
+
+# ╔═╡ d58f15bd-2e5c-4ff0-b008-e32b1e04da86
+ImageCoordinatePicker(data::AbstractVector{UInt8}; kwargs...) = ImageCoordinatePicker(; kwargs..., img_data=data)
+
 # ╔═╡ 5ba78d40-a1f3-4fe5-ab7a-723bc5b16d66
 begin
 	Base.@kwdef struct _ImgCoordinatePicker
 		img_url::Union{AbstractString,Nothing}=nothing
-		img_data::Union{Vector{UInt8},Nothing}=nothing 
+		img_data::Union{AbstractVector{UInt8},Nothing}=nothing
 		mime::Union{Nothing,MIME}=nothing
 		draggable::Bool=true
 		allow_only_one_event_per_render::Bool=false
@@ -171,6 +177,52 @@ begin
 end
 
 # ╔═╡ 16bd9bea-26e9-4a08-b5ac-8209c495751d
+"""
+```julia
+ImageCoordinatePicker(image_url::String; kwargs...)
+
+ImageCoordinatePicker(image_data::Vector{UInt8}; mime=MIME("image/png"), kwargs...)
+```
+
+Create a widget that displays the provided image, and captures all mouse / touch actions on it. Pointer events are sent back with `$("@")bind`, as a [`ClickCoordinate`](@ref) object.
+
+
+# Example
+
+```julia
+img_url = "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Eurasian_coot_%28Fulica_atra%29_with_chicks.jpg/640px-Eurasian_coot_%28Fulica_atra%29_with_chicks.jpg"
+```
+
+```julia
+$("@")bind coord ImageCoordinatePicker(img_url=img_url)
+```
+
+```julia
+# Let's look at what we got:
+coord
+```
+
+You will see the image, and when you click somewhere, `coords` is updated.
+
+# Full form with all kwargs:
+
+```julia
+ImageCoordinatePicker(;
+	# option 1) a URL
+	img_url::Union{AbstractString,Nothing}=nothing,
+	# option 2) image data with a MIME
+	img_data::Union{AbstractVector{UInt8},Nothing}=nothing,
+	mime::Union{Nothing,MIME}=nothing,
+
+	## more options:
+	# when holding down the mouse, send multiple events?
+	draggable::Bool=true,
+	# advanced
+	allow_only_one_event_per_render::Bool=false,
+)
+```
+
+"""
 ImageCoordinatePicker(;kwargs...) = _ImgCoordinatePicker(;kwargs...)
 
 # ╔═╡ 9e3b3203-fd6c-48d4-b3d3-f8daaa0afe8a
@@ -373,6 +425,8 @@ version = "17.4.0+2"
 # ╠═0e243fd6-083a-43f7-be51-c928e3c9bb7c
 # ╠═c8fa543d-9411-45ef-bf01-7dfe668653d4
 # ╠═16bd9bea-26e9-4a08-b5ac-8209c495751d
+# ╠═a9d84510-0aeb-45ee-80e0-3caa227e05a3
+# ╠═d58f15bd-2e5c-4ff0-b008-e32b1e04da86
 # ╠═5ba78d40-a1f3-4fe5-ab7a-723bc5b16d66
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
