@@ -1,5 +1,5 @@
 # PlutoImageCoordinatePicker.jl
-Get the coordinate where you clicked back through `@bind` in a Pluto.jl notebook.
+📍 Get the coordinate where you clicked back through `@bind` in a Pluto.jl notebook.
 
 
 
@@ -7,3 +7,4 @@ https://github.com/fonsp/PlutoImageCoordinatePicker.jl/assets/6933510/8d4d7ac0-0
 
 To read the documentation, use Pluto's Live Docs panel to learn more about the `PlutoImageCoordinatePicker.ImageCoordinatePicker` function.
 
+🗺️ Looking for a way to pick geographical coordinates on a map? Check out https://github.com/lukavdplas/PlutoMapPicker.jl
