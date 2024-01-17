@@ -167,12 +167,12 @@ begin
 				window.getSelection().empty()
 		
 				if($(picker.draggable)){
-					wrapper.addEventListener("pointermove", on_pointer_move);
+					window.addEventListener("pointermove", on_pointer_move);
 				}
 				on_pointer_move(e);
 			});
 			const mouseup = e => {
-				wrapper.removeEventListener("pointermove", on_pointer_move);
+				window.removeEventListener("pointermove", on_pointer_move);
 			};
 			document.addEventListener("pointerup", mouseup);
 			document.addEventListener("pointerleave", mouseup);
