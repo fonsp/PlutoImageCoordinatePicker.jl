@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.36
+# v0.19.42
 
 using Markdown
 using InteractiveUtils
@@ -10,6 +10,7 @@ using InteractiveUtils
 begin
 	import Pkg
 	Pkg.activate(dirname(@__DIR__))
+	Pkg.instantiate()
 end
   ╠═╡ =#
 
@@ -36,12 +37,37 @@ img_data = map(img_urls) do url
 end
   ╠═╡ =#
 
+# ╔═╡ f3bb33e1-bf93-46c1-862d-8fd42d78b86f
+# ╠═╡ skip_as_script = true
+#=╠═╡
+import Colors, ImageIO, ImageShow
+  ╠═╡ =#
+
+# ╔═╡ b9c72f75-bb13-46d5-a10a-548818cf82d0
+#=╠═╡
+test_img_from_images = rand(Colors.RGB, 100, 200)
+  ╠═╡ =#
+
+# ╔═╡ 354ba71e-9795-4d98-955d-4967ac25a7e5
+md"""
+# Definition
+"""
+
 # ╔═╡ c8fa543d-9411-45ef-bf01-7dfe668653d4
 struct ClickCoordinate
 	width::Float64
 	height::Float64
 	x::Float64
 	y::Float64
+end
+
+# ╔═╡ 99c684f5-2776-406f-908b-a22cb9f0e7e5
+function first_showable_mime(x)
+	for m in (MIME"image/svg+xml"(), MIME"image/png"(), MIME"image/bmp"(), MIME"image/jpeg"(), MIME"image/gif"())
+		if Base.showable(m, x)
+			return m
+		end
+	end
 end
 
 # ╔═╡ a9d84510-0aeb-45ee-80e0-3caa227e05a3
@@ -236,6 +262,27 @@ ImageCoordinatePicker(;
 """
 ImageCoordinatePicker(;kwargs...) = _ImgCoordinatePicker(;kwargs...)
 
+# ╔═╡ 4dc49d49-11db-468e-bcc2-a0ae9d2aea28
+function ImageCoordinatePicker(thing::Any; kwargs...)
+	mime = if haskey(kwargs, :mime)
+		values(kwargs).mime
+	else
+		m = first_showable_mime(thing)
+		if m === nothing
+			throw(ArgumentError("Called ImageCoordinatePicker(x) but x is not something that can be displayed as an image (svg, png)."))
+		end
+		m
+	end::MIME
+
+	img_data = let
+		io = IOBuffer()
+		show(io, mime, thing)
+		take!(io)
+	end
+
+	ImageCoordinatePicker(; kwargs..., img_data, mime)
+end
+
 # ╔═╡ 9e3b3203-fd6c-48d4-b3d3-f8daaa0afe8a
 #=╠═╡
 @bind asdf ImageCoordinatePicker(img_data=img_data[2], mime=MIME("image/svg+xml"), draggable=true)
@@ -256,6 +303,42 @@ asdf
 asdf2
   ╠═╡ =#
 
+# ╔═╡ 9eb0d291-9941-49fc-a367-ddd3df198691
+#=╠═╡
+@bind aa1 ImageCoordinatePicker(test_img_from_images; mime=MIME"image/png"())
+  ╠═╡ =#
+
+# ╔═╡ ab262eee-a3a0-42c4-b027-7c10f9111995
+#=╠═╡
+aa1
+  ╠═╡ =#
+
+# ╔═╡ b715c7fc-cbe6-4e76-8ddf-49febbee09ea
+#=╠═╡
+@bind aa2 ImageCoordinatePicker(test_img_from_images; mime=MIME"image/svg+xml"())
+  ╠═╡ =#
+
+# ╔═╡ 90454ba9-a31b-45cb-8e2d-38af7b0a4a09
+#=╠═╡
+aa2
+  ╠═╡ =#
+
+# ╔═╡ 57ee02be-2aec-4a88-b2b9-7cd394d4f441
+#=╠═╡
+@bind aa3 ImageCoordinatePicker(test_img_from_images)
+  ╠═╡ =#
+
+# ╔═╡ c9c6eb07-9ca9-4361-9fb6-00c4562d257d
+#=╠═╡
+aa3
+  ╠═╡ =#
+
+# ╔═╡ 3bbdfce9-ed1b-4e2d-963b-9752011a1fec
+# ╠═╡ skip_as_script = true
+#=╠═╡
+@bind nonono ImageCoordinatePicker(rand(5))
+  ╠═╡ =#
+
 # ╔═╡ Cell order:
 # ╠═930e8bd4-d630-406a-a3f3-f73371c9d388
 # ╠═556afd4e-b54e-11ee-3a1b-7b581fb5d9aa
@@ -266,8 +349,20 @@ asdf2
 # ╠═e02d5785-b113-4133-88ea-123e34346693
 # ╠═406455a3-13f4-4736-9aae-0a5a629758cc
 # ╠═0e243fd6-083a-43f7-be51-c928e3c9bb7c
+# ╠═f3bb33e1-bf93-46c1-862d-8fd42d78b86f
+# ╠═b9c72f75-bb13-46d5-a10a-548818cf82d0
+# ╠═9eb0d291-9941-49fc-a367-ddd3df198691
+# ╠═ab262eee-a3a0-42c4-b027-7c10f9111995
+# ╠═b715c7fc-cbe6-4e76-8ddf-49febbee09ea
+# ╠═90454ba9-a31b-45cb-8e2d-38af7b0a4a09
+# ╠═57ee02be-2aec-4a88-b2b9-7cd394d4f441
+# ╠═c9c6eb07-9ca9-4361-9fb6-00c4562d257d
+# ╠═3bbdfce9-ed1b-4e2d-963b-9752011a1fec
+# ╟─354ba71e-9795-4d98-955d-4967ac25a7e5
 # ╠═c8fa543d-9411-45ef-bf01-7dfe668653d4
 # ╠═16bd9bea-26e9-4a08-b5ac-8209c495751d
+# ╠═99c684f5-2776-406f-908b-a22cb9f0e7e5
+# ╠═4dc49d49-11db-468e-bcc2-a0ae9d2aea28
 # ╠═a9d84510-0aeb-45ee-80e0-3caa227e05a3
 # ╠═d58f15bd-2e5c-4ff0-b008-e32b1e04da86
 # ╠═5ba78d40-a1f3-4fe5-ab7a-723bc5b16d66
