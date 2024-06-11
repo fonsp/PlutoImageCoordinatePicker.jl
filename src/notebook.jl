@@ -147,12 +147,14 @@ begin
 				const svgrect = img.getBoundingClientRect()
 	
 				if(!$(picker.allow_only_one_event_per_render) || wrapper.fired_already === false){
-					console.log(e)
+					let ratw = svgrect.width / (img.naturalWidth ?? svgrect.width)
+					let rath = svgrect.height / (img.naturalHeight ?? svgrect.height)
+		
 					value.current = new Float64Array([
-						svgrect.width, 
-						svgrect.height,
-						clamp(e.clientX - svgrect.left, 0, svgrect.width),
-						clamp(e.clientY - svgrect.top, 0, svgrect.height),
+						svgrect.width / ratw, 
+						svgrect.height / rath,
+						clamp(e.clientX - svgrect.left, 0, svgrect.width) / ratw,
+						clamp(e.clientY - svgrect.top, 0, svgrect.height) / rath,
 					])
 	
 					wrapper.fired_already = true
