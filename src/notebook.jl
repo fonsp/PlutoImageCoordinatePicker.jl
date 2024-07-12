@@ -121,7 +121,7 @@ begin
 		img.style.cssText = $(picker.img_style)
 
 		const img_url = $(picker.img_url)
-		const img_data = $(AbstractPlutoDingetjes.Display.published_to_js(picker.img_data))
+		const img_data = $(picker.img_data === nothing ? nothing : AbstractPlutoDingetjes.Display.published_to_js(picker.img_data))
 		const mime = $(picker.mime === nothing ? nothing : string(picker.mime))
 		
 
