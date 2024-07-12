@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.42
+# v0.19.43
 
 using Markdown
 using InteractiveUtils
@@ -132,7 +132,7 @@ begin
 		}
 		
 		// Call `fetch` on the URL to trigger the browser to make it ready. 
-		let fetch_promise = fetch(url)
+		let fetch_promise = fetch(url, {mode: "no-cors"})
 		Promise.race([
 			fetch_promise, 
    			invalidation.then(x => null)
@@ -339,6 +339,12 @@ aa3
 @bind nonono ImageCoordinatePicker(rand(5))
   ╠═╡ =#
 
+# ╔═╡ de9a04d2-3f2c-463c-a499-f4e40cac317a
+# ╠═╡ skip_as_script = true
+#=╠═╡
+@bind yesscord ImageCoordinatePicker("https://s3-us-west-2.amazonaws.com/courses-images-archive-read-only/wp-content/uploads/sites/924/2016/06/23153103/CNX_Precalc_Figure_03_01_0022.jpg")
+  ╠═╡ =#
+
 # ╔═╡ Cell order:
 # ╠═930e8bd4-d630-406a-a3f3-f73371c9d388
 # ╠═556afd4e-b54e-11ee-3a1b-7b581fb5d9aa
@@ -358,6 +364,7 @@ aa3
 # ╠═57ee02be-2aec-4a88-b2b9-7cd394d4f441
 # ╠═c9c6eb07-9ca9-4361-9fb6-00c4562d257d
 # ╠═3bbdfce9-ed1b-4e2d-963b-9752011a1fec
+# ╠═de9a04d2-3f2c-463c-a499-f4e40cac317a
 # ╟─354ba71e-9795-4d98-955d-4967ac25a7e5
 # ╠═c8fa543d-9411-45ef-bf01-7dfe668653d4
 # ╠═16bd9bea-26e9-4a08-b5ac-8209c495751d
