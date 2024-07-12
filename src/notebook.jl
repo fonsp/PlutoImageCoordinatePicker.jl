@@ -82,6 +82,7 @@ begin
 		img_url::Union{AbstractString,Nothing}=nothing
 		img_data::Union{AbstractVector{UInt8},Nothing}=nothing
 		mime::Union{Nothing,MIME}=nothing
+		img_style::AbstractString=""
 		draggable::Bool=true
 		allow_only_one_event_per_render::Bool=false
 	end
@@ -113,10 +114,11 @@ begin
 
 		const wrapper = this ?? html`
 			<div style='touch-action: none;'>
-				<img style='width: 100%; background: white;'>
+				<img>
 			</div>
 		`
 		const img = wrapper.firstElementChild
+		img.style.cssText = $(picker.img_style)
 
 		const img_url = $(picker.img_url)
 		const img_data = $(AbstractPlutoDingetjes.Display.published_to_js(picker.img_data))
@@ -254,6 +256,8 @@ ImageCoordinatePicker(;
 	## more options:
 	# when holding down the mouse, send multiple events?
 	draggable::Bool=true,
+	# CSS style the image. Set to "width: 100%;" to fill width.
+	img_style=nothing,
 	# advanced
 	allow_only_one_event_per_render::Bool=false,
 )
@@ -305,7 +309,7 @@ asdf2
 
 # ╔═╡ 9eb0d291-9941-49fc-a367-ddd3df198691
 #=╠═╡
-@bind aa1 ImageCoordinatePicker(test_img_from_images; mime=MIME"image/png"())
+@bind aa1 ImageCoordinatePicker(test_img_from_images; mime=MIME"image/png"(), draggable=false)
   ╠═╡ =#
 
 # ╔═╡ ab262eee-a3a0-42c4-b027-7c10f9111995
@@ -331,6 +335,11 @@ aa2
 # ╔═╡ c9c6eb07-9ca9-4361-9fb6-00c4562d257d
 #=╠═╡
 aa3
+  ╠═╡ =#
+
+# ╔═╡ f96be87c-8c8d-4767-9f41-a059788beb24
+#=╠═╡
+ImageCoordinatePicker(test_img_from_images; img_style="filter: grayscale(1); width: 150px;")
   ╠═╡ =#
 
 # ╔═╡ 3bbdfce9-ed1b-4e2d-963b-9752011a1fec
@@ -363,6 +372,7 @@ aa3
 # ╠═90454ba9-a31b-45cb-8e2d-38af7b0a4a09
 # ╠═57ee02be-2aec-4a88-b2b9-7cd394d4f441
 # ╠═c9c6eb07-9ca9-4361-9fb6-00c4562d257d
+# ╠═f96be87c-8c8d-4767-9f41-a059788beb24
 # ╠═3bbdfce9-ed1b-4e2d-963b-9752011a1fec
 # ╠═de9a04d2-3f2c-463c-a499-f4e40cac317a
 # ╟─354ba71e-9795-4d98-955d-4967ac25a7e5
