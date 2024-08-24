@@ -4,6 +4,16 @@
 using Markdown
 using InteractiveUtils
 
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+end
+
 # ╔═╡ 930e8bd4-d630-406a-a3f3-f73371c9d388
 # ╠═╡ skip_as_script = true
 #=╠═╡
@@ -39,6 +49,13 @@ img_data = map(img_urls) do url
 	read(download(url))
 end
   ╠═╡ =#
+
+# ╔═╡ 1c798857-386b-4c3c-80d8-d6f18b635629
+md"""
+If you want to test with the packages below, you need to add them to your global Pkg environment.
+
+If there is an error below, that's fine, you just don't get to test it.
+"""
 
 # ╔═╡ f3bb33e1-bf93-46c1-862d-8fd42d78b86f
 # ╠═╡ skip_as_script = true
@@ -85,6 +102,7 @@ begin
 		img_url::Union{AbstractString,Nothing}=nothing
 		img_data::Union{AbstractVector{UInt8},Nothing}=nothing
 		pointer_url::Union{AbstractString,Nothing}=nothing
+		default::Union{ClickCoordinate,Nothing}=nothing
 		mime::Union{Nothing,MIME}=nothing
 		img_style::AbstractString=""
 		draggable::Bool=true
@@ -92,7 +110,7 @@ begin
 	end
 
 
-	AbstractPlutoDingetjes.Bonds.initial_value(picker::_ImgCoordinatePicker) = nothing
+	AbstractPlutoDingetjes.Bonds.initial_value(picker::_ImgCoordinatePicker) = picker.default
 	AbstractPlutoDingetjes.Bonds.possible_values(picker::_ImgCoordinatePicker) = AbstractPlutoDingetjes.Bonds.InfinitePossibilities()
 
 
@@ -117,9 +135,9 @@ begin
 		h = @htl("""<script id="hello">
 
 		const wrapper = this ?? html`
-			<div style='touch-action: none; position: relative;'>
-				<img>
-				<img style="position: absolute; left: 0; top: 0; visibility: hidden; translate: -50% -50%; pointer-events: none;">
+			<div class="PlutoImageCoordinatePicker" style='touch-action: none; position: relative;'>
+				<img class="PlutoImageCoordinatePicker-image">
+				<img class="PlutoImageCoordinatePicker-pointer" style="position: absolute; left: 0; top: 0; visibility: hidden; translate: -50% -50%; pointer-events: none;">
 			</div>
 		`
 		const img = wrapper.firstElementChild
@@ -134,7 +152,7 @@ begin
 		if(pointer_url != null) {
 			pointer_img.src = pointer_url
 		} else {
-			pointer_img.remove()
+			// pointer_img.remove()
 		}
 		const set_pointer_pos = (x,y) => {
 			if(x != null) {
@@ -167,22 +185,40 @@ begin
 		
 		
 		wrapper.fired_already = false
-		
 		wrapper.last_render_time = Date.now()
+
+		const get_rendering_ratios = (svgrect) => {
+			svgrect = svgrect ?? img.getBoundingClientRect()
+			return [
+				svgrect.width / (img.naturalWidth ?? svgrect.width),
+				svgrect.height / (img.naturalHeight ?? svgrect.height),
+			]
+		}
 
 		// If running for the first time
 		if(this == null) {
-			console.log("Creating new plotclicktracker...")
+			console.log("Creating new plotclicktracker...", wrapper.value)
+
+			const defaultz = $(picker.default === nothing ? nothing : (picker.default.width, picker.default.height, picker.default.x, picker.default.y))
 		
-			const value = {current: null}
+			const value = {current: defaultz == null ? null : new Float64Array(defaultz)}
 		
 			Object.defineProperty(wrapper, "value", {
 				get: () => value.current,
 				set: (pos) => {
 					value.current = pos
-		// set_poiter_pos
+					if(pos == null) {
+						set_pointer_pos(null)
+					} else {
+						let [ratw, rath] = get_rendering_ratios()
+						set_pointer_pos(pos[2] * ratw, pos[3] * rath)
+					}
 				},
 			})
+		
+			if(defaultz) {
+				wrapper.value = wrapper.value
+			}
 		
 		
 			////
@@ -194,21 +230,27 @@ begin
 				const svgrect = img.getBoundingClientRect()
 	
 				if(!$(picker.allow_only_one_event_per_render) || wrapper.fired_already === false){
-					let ratw = svgrect.width / (img.naturalWidth ?? svgrect.width)
-					let rath = svgrect.height / (img.naturalHeight ?? svgrect.height)
+					let [ratw, rath] = get_rendering_ratios(svgrect)
+
+					let inputx = clamp(e.clientX - svgrect.left, 0, svgrect.width)
+					let inputy = clamp(e.clientY - svgrect.top, 0, svgrect.height)
 		
 					value.current = new Float64Array([
 						svgrect.width / ratw, 
 						svgrect.height / rath,
-						clamp(e.clientX - svgrect.left, 0, svgrect.width) / ratw,
-						clamp(e.clientY - svgrect.top, 0, svgrect.height) / rath,
+						inputx / ratw,
+						inputy / rath,
 					])
 
-					set_pointer_pos(e.clientX - svgrect.left, e.clientY - svgrect.top)
+					set_pointer_pos(inputx, inputy)
 		
 					wrapper.fired_already = true
 					wrapper.dispatchEvent(new CustomEvent("input"), {})
 				}
+			}
+
+			const on_img_load = () => {
+				wrapper.value = wrapper.value
 			}
 
 			////
@@ -227,7 +269,18 @@ begin
 			};
 			document.addEventListener("pointerup", mouseup);
 			document.addEventListener("pointerleave", mouseup);
-			wrapper.onselectstart = () => false
+			window.addEventListener("resize", on_img_load)
+			img.addEventListener("load", on_img_load)
+			// wrapper.onselectstart = () => false
+
+
+			// uhhh no because it might re-render...
+			/* invalidation.then(() => {
+				window.removeEventListener("pointermove", on_pointer_move);
+				
+				document.removeEventListener("pointerup", mouseup);
+				document.removeEventListener("pointerleave", mouseup);
+			}) */
 		}
 		return wrapper
 		</script>""")
@@ -264,6 +317,26 @@ coord
 
 You will see the image, and when you click somewhere, `coords` is updated.
 
+# Default
+Before you click for the first time, the `@bind` value will be `nothing`. If you want to change this, you can **set the intially clicked coordinate** with the `default` kwarg. You set it to a [`PlutoImageCoordinatePicker.ClickCoordinate`] instance.
+
+Tip: use your picker without a default value and click where you want the initial point to be. Then copy the bound value.
+
+# Pointer
+You can pick a **pointer** (aka cursor) image that is shown on the selected point. By default, this is a small circle. The [`Pointers`](@ref) object contains some common options.
+
+```julia
+import PlutoImageCoordinatePicker: Pointers
+ImageCoordinatePicker(img_url=img_url, pointer_url=Pointers.Cross)
+```
+
+`pointer_url` can also be the URL of an image, which will be displayed at full size, centered around the clicked point. If you have an SVG image, you can use it like so:
+
+```julia
+svg_data = "<svg width="30" ...> ... </svg>"
+pointer_url = "data:image/svg+xml;base64,\$(Base64.base64encode(svg_data))"
+```
+
 # Full form with all kwargs:
 
 ```julia
@@ -277,6 +350,9 @@ ImageCoordinatePicker(;
 	## more options:
 	# when holding down the mouse, send multiple events?
 	draggable::Bool=true,
+	# this image will be displayed on the selected point. 
+	pointer::Union{AbstractString,Nothing}=Pointers.circle,
+	
 	# CSS style the image. Set to "width: 100%;" to fill width.
 	img_style=nothing,
 	# advanced
@@ -307,16 +383,6 @@ function ImageCoordinatePicker(thing::Any; kwargs...)
 
 	ImageCoordinatePicker(; kwargs..., img_data, mime)
 end
-
-# ╔═╡ 9e3b3203-fd6c-48d4-b3d3-f8daaa0afe8a
-#=╠═╡
-@bind asdf ImageCoordinatePicker(img_data=img_data[2], mime=MIME("image/svg+xml"), draggable=true)
-  ╠═╡ =#
-
-# ╔═╡ e02d5785-b113-4133-88ea-123e34346693
-#=╠═╡
-asdf
-  ╠═╡ =#
 
 # ╔═╡ 406455a3-13f4-4736-9aae-0a5a629758cc
 #=╠═╡
@@ -369,17 +435,16 @@ ImageCoordinatePicker(test_img_from_images; img_style="filter: grayscale(1); wid
 @bind nonono ImageCoordinatePicker(rand(5))
   ╠═╡ =#
 
+# ╔═╡ becb4e51-ec3b-4077-b28c-a44d4c924a09
+md"""
+# Pointers
+"""
+
 # ╔═╡ 564fba60-0659-4909-87de-178cc207e94c
 svg_data_to_url(d) = "data:image/svg+xml;base64,$(base64encode(d))"
 
-# ╔═╡ 0d9fb8a4-b05a-4ca6-8059-3e26b7585eb7
-# ╠═╡ skip_as_script = true
-#=╠═╡
-preview_svg(d) = @htl """<img src=$(d) >"""
-  ╠═╡ =#
-
 # ╔═╡ 6ed0d836-beb5-4c7e-9cd4-83d47d4c66df
-const circle = """
+const Circle = """
 <svg
 width="20"
 height="20"
@@ -392,7 +457,7 @@ height="20"
 """ |> svg_data_to_url
 
 # ╔═╡ 4d76ab73-13cd-49a2-97e2-f0b2f96a3e7b
-const circle_inverted = """
+const CircleInverted = """
 <svg
 width="20"
 height="20"
@@ -405,7 +470,7 @@ height="20"
 """ |> svg_data_to_url
 
 # ╔═╡ 4655d43c-239e-43bb-8cf9-dba03ef1f3a2
-const cross = """
+const Cross = """
 <svg
 width="30"
 height="30"
@@ -421,7 +486,7 @@ height="30"
 """ |> svg_data_to_url
 
 # ╔═╡ 0890b5e2-bb82-4c44-910b-347850de98d8
-const cross_inverted = """
+const CrossInverted = """
 <svg
 width="30"
 height="30"
@@ -436,23 +501,45 @@ height="30"
 
 """ |> svg_data_to_url
 
-# ╔═╡ bbc1cff8-af71-4824-82fb-9e5187f81674
-#=╠═╡
-preview_svg(cross_inverted)
-  ╠═╡ =#
-
 # ╔═╡ cf37e8d8-2134-4795-9ce7-cfbd08893f2d
 const Pointers = (;
-	circle,
-	circle_inverted,
-	cross,
-	cross_inverted,
+	Circle,
+	CircleInverted,
+	Cross,
+	CrossInverted,
 )
+
+# ╔═╡ 9e3b3203-fd6c-48d4-b3d3-f8daaa0afe8a
+#=╠═╡
+@bind asdf ImageCoordinatePicker(img_data=img_data[2], mime=MIME("image/svg+xml"), draggable=true; pointer_url=Pointers.Circle)
+  ╠═╡ =#
+
+# ╔═╡ e02d5785-b113-4133-88ea-123e34346693
+#=╠═╡
+asdf
+  ╠═╡ =#
 
 # ╔═╡ de9a04d2-3f2c-463c-a499-f4e40cac317a
 # ╠═╡ skip_as_script = true
 #=╠═╡
-@bind yesscord ImageCoordinatePicker("https://s3-us-west-2.amazonaws.com/courses-images-archive-read-only/wp-content/uploads/sites/924/2016/06/23153103/CNX_Precalc_Figure_03_01_0022.jpg"; pointer_url=Pointers.circle)
+@bind yesscord ImageCoordinatePicker("https://s3-us-west-2.amazonaws.com/courses-images-archive-read-only/wp-content/uploads/sites/924/2016/06/23153103/CNX_Precalc_Figure_03_01_0022.jpg"; pointer_url=Pointers.Circle,
+default=ClickCoordinate(9000, 500, 100, 250))
+  ╠═╡ =#
+
+# ╔═╡ 1a62bc39-80a5-4d8c-929f-f3af4d1cdef1
+#=╠═╡
+yesscord
+  ╠═╡ =#
+
+# ╔═╡ 0d9fb8a4-b05a-4ca6-8059-3e26b7585eb7
+# ╠═╡ skip_as_script = true
+#=╠═╡
+preview_svg(d) = @htl "<img src=$d >"
+  ╠═╡ =#
+
+# ╔═╡ 85e5189d-a459-4237-ab96-898242286fb3
+#=╠═╡
+map(preview_svg, Pointers)
   ╠═╡ =#
 
 # ╔═╡ Cell order:
@@ -465,6 +552,7 @@ const Pointers = (;
 # ╠═e02d5785-b113-4133-88ea-123e34346693
 # ╠═406455a3-13f4-4736-9aae-0a5a629758cc
 # ╠═0e243fd6-083a-43f7-be51-c928e3c9bb7c
+# ╟─1c798857-386b-4c3c-80d8-d6f18b635629
 # ╠═f3bb33e1-bf93-46c1-862d-8fd42d78b86f
 # ╠═b9c72f75-bb13-46d5-a10a-548818cf82d0
 # ╠═9eb0d291-9941-49fc-a367-ddd3df198691
@@ -476,20 +564,22 @@ const Pointers = (;
 # ╠═f96be87c-8c8d-4767-9f41-a059788beb24
 # ╠═3bbdfce9-ed1b-4e2d-963b-9752011a1fec
 # ╠═de9a04d2-3f2c-463c-a499-f4e40cac317a
+# ╠═1a62bc39-80a5-4d8c-929f-f3af4d1cdef1
 # ╟─354ba71e-9795-4d98-955d-4967ac25a7e5
 # ╠═c8fa543d-9411-45ef-bf01-7dfe668653d4
 # ╠═16bd9bea-26e9-4a08-b5ac-8209c495751d
 # ╠═99c684f5-2776-406f-908b-a22cb9f0e7e5
-# ╠═4dc49d49-11db-468e-bcc2-a0ae9d2aea28
 # ╠═a9d84510-0aeb-45ee-80e0-3caa227e05a3
 # ╠═d58f15bd-2e5c-4ff0-b008-e32b1e04da86
+# ╠═4dc49d49-11db-468e-bcc2-a0ae9d2aea28
 # ╠═5ba78d40-a1f3-4fe5-ab7a-723bc5b16d66
+# ╟─becb4e51-ec3b-4077-b28c-a44d4c924a09
 # ╠═af513821-9040-4393-a012-8ebe8dc88e4a
 # ╠═564fba60-0659-4909-87de-178cc207e94c
-# ╠═0d9fb8a4-b05a-4ca6-8059-3e26b7585eb7
-# ╠═6ed0d836-beb5-4c7e-9cd4-83d47d4c66df
-# ╠═4d76ab73-13cd-49a2-97e2-f0b2f96a3e7b
-# ╠═4655d43c-239e-43bb-8cf9-dba03ef1f3a2
-# ╠═0890b5e2-bb82-4c44-910b-347850de98d8
-# ╠═bbc1cff8-af71-4824-82fb-9e5187f81674
-# ╠═cf37e8d8-2134-4795-9ce7-cfbd08893f2d
+# ╟─6ed0d836-beb5-4c7e-9cd4-83d47d4c66df
+# ╟─4d76ab73-13cd-49a2-97e2-f0b2f96a3e7b
+# ╟─4655d43c-239e-43bb-8cf9-dba03ef1f3a2
+# ╟─0890b5e2-bb82-4c44-910b-347850de98d8
+# ╟─cf37e8d8-2134-4795-9ce7-cfbd08893f2d
+# ╠═85e5189d-a459-4237-ab96-898242286fb3
+# ╟─0d9fb8a4-b05a-4ca6-8059-3e26b7585eb7
