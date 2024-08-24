@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.43
+# v0.19.46
 
 using Markdown
 using InteractiveUtils
@@ -19,6 +19,9 @@ using HypertextLiteral
 
 # ╔═╡ 012c3ed5-6263-4dd7-8069-772f7efafdbb
 using AbstractPlutoDingetjes
+
+# ╔═╡ af513821-9040-4393-a012-8ebe8dc88e4a
+using Base64
 
 # ╔═╡ b368179a-e29d-407b-90fe-61d9812b3c22
 # ╠═╡ skip_as_script = true
@@ -81,6 +84,7 @@ begin
 	Base.@kwdef struct _ImgCoordinatePicker
 		img_url::Union{AbstractString,Nothing}=nothing
 		img_data::Union{AbstractVector{UInt8},Nothing}=nothing
+		pointer_url::Union{AbstractString,Nothing}=nothing
 		mime::Union{Nothing,MIME}=nothing
 		img_style::AbstractString=""
 		draggable::Bool=true
@@ -113,17 +117,32 @@ begin
 		h = @htl("""<script id="hello">
 
 		const wrapper = this ?? html`
-			<div style='touch-action: none;'>
+			<div style='touch-action: none; position: relative;'>
 				<img>
+				<img style="position: absolute; left: 0; top: 0; visibility: hidden; translate: -50% -50%;">
 			</div>
 		`
 		const img = wrapper.firstElementChild
+		const pointer_img = wrapper.lastElementChild
 		img.style.cssText = $(picker.img_style)
 
 		const img_url = $(picker.img_url)
 		const img_data = $(picker.img_data === nothing ? nothing : AbstractPlutoDingetjes.Display.published_to_js(picker.img_data))
 		const mime = $(picker.mime === nothing ? nothing : string(picker.mime))
-		
+
+		const pointer_url = $(picker.pointer_url)
+		if(pointer_url != null) {
+			pointer_img.src = pointer_url
+		} else {
+			pointer_img.remove()
+		}
+		const set_pointer_pos = (x,y) => {
+			if(x != null) {
+				pointer_img.style.left = `\${x}px`
+				pointer_img.style.top = `\${y}px`
+				pointer_img.style.visibility = "visible"
+			}
+		}
 
 		let url = img_url
 		if(img_url == null){
@@ -159,9 +178,9 @@ begin
 		
 			Object.defineProperty(wrapper, "value", {
 				get: () => value.current,
-				set: (x) => {
-					// not really necessary
-					value.current = x
+				set: (pos) => {
+					value.current = pos
+		// set_poiter_pos
 				},
 			})
 		
@@ -184,7 +203,9 @@ begin
 						clamp(e.clientX - svgrect.left, 0, svgrect.width) / ratw,
 						clamp(e.clientY - svgrect.top, 0, svgrect.height) / rath,
 					])
-	
+
+					set_pointer_pos(e.clientX - svgrect.left, e.clientY - svgrect.top)
+		
 					wrapper.fired_already = true
 					wrapper.dispatchEvent(new CustomEvent("input"), {})
 				}
@@ -348,10 +369,90 @@ ImageCoordinatePicker(test_img_from_images; img_style="filter: grayscale(1); wid
 @bind nonono ImageCoordinatePicker(rand(5))
   ╠═╡ =#
 
+# ╔═╡ 564fba60-0659-4909-87de-178cc207e94c
+svg_data_to_url(d) = "data:image/svg+xml;base64,$(base64encode(d))"
+
+# ╔═╡ 0d9fb8a4-b05a-4ca6-8059-3e26b7585eb7
+# ╠═╡ skip_as_script = true
+#=╠═╡
+preview_svg(d) = @htl """<img src=$(d) >"""
+  ╠═╡ =#
+
+# ╔═╡ 6ed0d836-beb5-4c7e-9cd4-83d47d4c66df
+const circle = """
+<svg
+width="20"
+height="20"
+  viewBox="0 0 20 20"
+  xmlns="http://www.w3.org/2000/svg">
+  <circle fill="white" stroke="black" cx="10" cy="10" r="8" stroke-width="4" />
+
+</svg>
+
+""" |> svg_data_to_url
+
+# ╔═╡ 4d76ab73-13cd-49a2-97e2-f0b2f96a3e7b
+const circle_inverted = """
+<svg
+width="20"
+height="20"
+  viewBox="0 0 20 20"
+  xmlns="http://www.w3.org/2000/svg">
+  <circle fill="black" stroke="white" cx="10" cy="10" r="8" stroke-width="4" />
+
+</svg>
+
+""" |> svg_data_to_url
+
+# ╔═╡ 4655d43c-239e-43bb-8cf9-dba03ef1f3a2
+const cross = """
+<svg
+width="30"
+height="30"
+  viewBox="0 0 20 20"
+  xmlns="http://www.w3.org/2000/svg">
+  <line x1="0" x2="20" y1="10" y2="10" stroke="black" stroke-width="3" />
+  <line y1="0" y2="20" x1="10" x2="10" stroke="black" stroke-width="3" />
+  <line x1="1" x2="19" y1="10" y2="10" stroke="white" stroke-width="1" />
+  <line y1="1" y2="19" x1="10" x2="10" stroke="white" stroke-width="1" />
+
+</svg>
+
+""" |> svg_data_to_url
+
+# ╔═╡ 0890b5e2-bb82-4c44-910b-347850de98d8
+const cross_inverted = """
+<svg
+width="30"
+height="30"
+  viewBox="0 0 20 20"
+  xmlns="http://www.w3.org/2000/svg">
+  <line x1="0" x2="20" y1="10" y2="10" stroke="white" stroke-width="3" />
+  <line y1="0" y2="20" x1="10" x2="10" stroke="white" stroke-width="3" />
+  <line x1="1" x2="19" y1="10" y2="10" stroke="black" stroke-width="1" />
+  <line y1="1" y2="19" x1="10" x2="10" stroke="black" stroke-width="1" />
+
+</svg>
+
+""" |> svg_data_to_url
+
+# ╔═╡ bbc1cff8-af71-4824-82fb-9e5187f81674
+#=╠═╡
+preview_svg(cross_inverted)
+  ╠═╡ =#
+
+# ╔═╡ cf37e8d8-2134-4795-9ce7-cfbd08893f2d
+const Pointers = (;
+	circle,
+	circle_inverted,
+	cross,
+	cross_inverted,
+)
+
 # ╔═╡ de9a04d2-3f2c-463c-a499-f4e40cac317a
 # ╠═╡ skip_as_script = true
 #=╠═╡
-@bind yesscord ImageCoordinatePicker("https://s3-us-west-2.amazonaws.com/courses-images-archive-read-only/wp-content/uploads/sites/924/2016/06/23153103/CNX_Precalc_Figure_03_01_0022.jpg")
+@bind yesscord ImageCoordinatePicker("https://s3-us-west-2.amazonaws.com/courses-images-archive-read-only/wp-content/uploads/sites/924/2016/06/23153103/CNX_Precalc_Figure_03_01_0022.jpg"; pointer_url=Pointers.circle)
   ╠═╡ =#
 
 # ╔═╡ Cell order:
@@ -383,3 +484,12 @@ ImageCoordinatePicker(test_img_from_images; img_style="filter: grayscale(1); wid
 # ╠═a9d84510-0aeb-45ee-80e0-3caa227e05a3
 # ╠═d58f15bd-2e5c-4ff0-b008-e32b1e04da86
 # ╠═5ba78d40-a1f3-4fe5-ab7a-723bc5b16d66
+# ╠═af513821-9040-4393-a012-8ebe8dc88e4a
+# ╠═564fba60-0659-4909-87de-178cc207e94c
+# ╠═0d9fb8a4-b05a-4ca6-8059-3e26b7585eb7
+# ╠═6ed0d836-beb5-4c7e-9cd4-83d47d4c66df
+# ╠═4d76ab73-13cd-49a2-97e2-f0b2f96a3e7b
+# ╠═4655d43c-239e-43bb-8cf9-dba03ef1f3a2
+# ╠═0890b5e2-bb82-4c44-910b-347850de98d8
+# ╠═bbc1cff8-af71-4824-82fb-9e5187f81674
+# ╠═cf37e8d8-2134-4795-9ce7-cfbd08893f2d
