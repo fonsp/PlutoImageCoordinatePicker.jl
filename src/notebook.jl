@@ -119,7 +119,7 @@ begin
 		const wrapper = this ?? html`
 			<div style='touch-action: none; position: relative;'>
 				<img>
-				<img style="position: absolute; left: 0; top: 0; visibility: hidden; translate: -50% -50%;">
+				<img style="position: absolute; left: 0; top: 0; visibility: hidden; translate: -50% -50%; pointer-events: none;">
 			</div>
 		`
 		const img = wrapper.firstElementChild
