@@ -33,9 +33,6 @@ using AbstractPlutoDingetjes
 # ╔═╡ af513821-9040-4393-a012-8ebe8dc88e4a
 using Base64
 
-# ╔═╡ c617de76-e92c-4665-a7a9-aa790cd85fa3
-
-
 # ╔═╡ b368179a-e29d-407b-90fe-61d9812b3c22
 # ╠═╡ skip_as_script = true
 #=╠═╡
@@ -53,14 +50,11 @@ img_data = map(img_urls) do url
 end
   ╠═╡ =#
 
-# ╔═╡ 487e6c6c-cefc-48a0-a7a5-01d12c6176ea
-
-
 # ╔═╡ 1c798857-386b-4c3c-80d8-d6f18b635629
 md"""
 If you want to test with the packages below, you need to add them to your global Pkg environment.
 
-If there is an error below, that's fine, you just don't get to test it.
+**If there is an error below, that's fine, you just don't get to test it.**
 """
 
 # ╔═╡ f3bb33e1-bf93-46c1-862d-8fd42d78b86f
@@ -398,12 +392,12 @@ coord
 You will see the image, and when you click somewhere, `coords` is updated.
 
 # Default
-Before you click for the first time, the `@bind` value will be `nothing`. If you want to change this, you can **set the intially clicked coordinate** with the `default` kwarg. You set it to a [`PlutoImageCoordinatePicker.ClickCoordinate`] instance.
+Before you click for the first time, the `@bind` value will be `nothing`. If you want to change this, you can **set the intially clicked coordinate** with the `default` kwarg. You set it to a [`PlutoImageCoordinatePicker.ClickCoordinate`](@ref) instance.
 
 Tip: use your picker without a default value and click where you want the initial point to be. Then copy the bound value.
 
 # Pointer
-You can pick a **pointer** (aka cursor) image that is shown on the selected point. By default, this is a small circle. The [`Pointers`](@ref) object contains some common options.
+You can pick a **pointer** (aka cursor) image that is shown on the selected point. By default, this is a small circle. The [`PlutoImageCoordinatePicker.Pointers`](@ref) object contains some common options.
 
 ```julia
 import PlutoImageCoordinatePicker: Pointers
@@ -552,13 +546,11 @@ map(preview_svg, Pointers)
 # ╠═930e8bd4-d630-406a-a3f3-f73371c9d388
 # ╠═556afd4e-b54e-11ee-3a1b-7b581fb5d9aa
 # ╠═012c3ed5-6263-4dd7-8069-772f7efafdbb
-# ╠═c617de76-e92c-4665-a7a9-aa790cd85fa3
 # ╠═b368179a-e29d-407b-90fe-61d9812b3c22
 # ╠═e03c0e08-4010-4eb9-8da2-8131ef0b3023
 # ╠═9e3b3203-fd6c-48d4-b3d3-f8daaa0afe8a
 # ╠═e02d5785-b113-4133-88ea-123e34346693
 # ╠═406455a3-13f4-4736-9aae-0a5a629758cc
-# ╠═487e6c6c-cefc-48a0-a7a5-01d12c6176ea
 # ╠═0e243fd6-083a-43f7-be51-c928e3c9bb7c
 # ╟─1c798857-386b-4c3c-80d8-d6f18b635629
 # ╠═f3bb33e1-bf93-46c1-862d-8fd42d78b86f
