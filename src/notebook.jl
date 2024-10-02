@@ -52,9 +52,11 @@ end
 
 # ╔═╡ 1c798857-386b-4c3c-80d8-d6f18b635629
 md"""
-If you want to test with the packages below, you need to add them to your global Pkg environment.
-
-**If there is an error below, that's fine, you just don't get to test it.**
+!!! warning
+	If you want to test with the packages below, you need to add them to your global Pkg environment.
+	
+	!!! info
+		**If there is an error below, that's fine, you just don't get to test it.**
 """
 
 # ╔═╡ f3bb33e1-bf93-46c1-862d-8fd42d78b86f
@@ -180,6 +182,7 @@ begin
 		mime::Union{Nothing,MIME}=nothing
 		img_style::AbstractString=""
 		draggable::Bool=true
+		hint::Bool=true
 		allow_only_one_event_per_render::Bool=false
 	end
 
@@ -209,9 +212,12 @@ begin
 		h = @htl("""<script id="hello">
 
 		const wrapper = this ?? html`
-			<div class="PlutoImageCoordinatePicker" style='touch-action: none; position: relative;'>
+			<div class="PlutoImageCoordinatePicker" style='touch-action: none; position: relative; display: flex;'>
 				<img class="PlutoImageCoordinatePicker-image">
-				<img class="PlutoImageCoordinatePicker-pointer" style="position: absolute; left: 0; top: 0; visibility: hidden; translate: -50% -50%; pointer-events: none;">
+				<span class="PlutoImageCoordinatePicker-pointer" style="position: absolute; display: flex; left: 0; top: 0; visibility: hidden; translate: -50% -50%; pointer-events: none;">
+					<img >
+					<margo-knob-label>👈 Move me!</margo-knob-label>
+				</span>
 			</div>
 		`
 		const img = wrapper.firstElementChild
@@ -224,7 +230,7 @@ begin
 
 		const pointer_url = $(picker.pointer_url)
 		if(pointer_url != null) {
-			pointer_img.src = pointer_url
+			pointer_img.querySelector("img").src = pointer_url
 		} else {
 			// pointer_img.remove()
 		}
@@ -271,8 +277,6 @@ begin
 
 		// If running for the first time
 		if(this == null) {
-			console.log("Creating new plotclicktracker...", wrapper.value)
-
 			const defaultz = $(picker.default === nothing ? nothing : (picker.default.width, picker.default.height, picker.default.x, picker.default.y))
 		
 			const value = {current: defaultz == null ? null : new Float64Array(defaultz)}
@@ -317,7 +321,8 @@ begin
 					])
 
 					set_pointer_pos(inputx, inputy)
-		
+
+					wrapper.classList.toggle("wiggleee", false)
 					wrapper.fired_already = true
 					wrapper.dispatchEvent(new CustomEvent("input"), {})
 				}
@@ -343,10 +348,31 @@ begin
 			};
 			document.addEventListener("pointerup", mouseup);
 			document.addEventListener("pointerleave", mouseup);
-			window.addEventListener("resize", on_img_load)
 			img.addEventListener("load", on_img_load)
 			// wrapper.onselectstart = () => false
 
+			let ro = new ResizeObserver(on_img_load)
+			ro.observe(img)
+
+			
+			////
+			// Intersection observer to trigger to wiggle animation
+			if($(picker.hint)){
+				const observer = new IntersectionObserver((es) => {
+					es.forEach((e) => {
+						if(Date.now() - wrapper.last_render_time > 500){
+							wrapper.classList.toggle("wiggleee", e.isIntersecting)
+						}
+					})
+				}, {
+					rootMargin: `20px`,
+					threshold: 1,
+				})
+				observer.observe(wrapper)
+			}
+			wrapper.classList.toggle("wiggleee", $(picker.hint))
+			wrapper.style.contain = $(picker.hint) ? "" : "content"
+		
 
 			// uhhh no because it might re-render...
 			/* invalidation.then(() => {
@@ -355,9 +381,67 @@ begin
 				document.removeEventListener("pointerup", mouseup);
 				document.removeEventListener("pointerleave", mouseup);
 			}) */
+
 		}
 		return wrapper
-		</script>""")
+		</script><style>
+				
+		margo-knob-label {
+			transform: translate(32px, calc(20% - 1em));
+		    display: block;
+		    position: absolute;
+		    left: 0;
+		    top: 0;
+			white-space: nowrap;
+		    background: #d6eccb;
+			color: black;
+		    font-family: system-ui;
+		    padding: .4em;
+		    border-radius: 11px;
+		    font-weight: 600;
+			pointer-events: none;
+			opacity: 0;
+		}
+		.wiggleee .PlutoImageCoordinatePicker-pointer {
+			animation: wiggleee 5s ease-in-out;
+			animation-delay: 600ms;
+		}
+		.wiggleee margo-knob-label {
+			animation: pic-fadeout 1s ease-in-out;
+			animation-delay: 3s;
+			animation-fill-mode: both;
+		}
+				
+		@keyframes pic-fadeout {
+			from {
+				opacity: 1;
+			}
+			to {
+				opactiy: 0;
+			}
+		}
+
+		@keyframes wiggleee {
+			0% {
+				transform: translate(0px, -0px);
+			}
+			3% {
+				transform: translate(-8px, -0px);
+			}
+			6% {
+				transform: translate(8px, -0px);
+			}
+			10% {
+				transform: translate(-24px, -0px);
+			}
+			15% {
+				transform: translate(8px, -0px);
+			}
+			25% {
+				transform: translate(0px, -0px);
+			}
+		}
+		</style>""")
 
 		show(io, m, h)
 	end
@@ -426,6 +510,8 @@ ImageCoordinatePicker(;
 	draggable::Bool=true,
 	# this image will be displayed on the selected point. 
 	pointer::Union{AbstractString,Nothing}=Pointers.Circle,
+	# show a hint that the pointer can be moved?
+	hint::Bool=true,
 	
 	# CSS style the image. Set to "width: 100%;" to fill width.
 	img_style=nothing,
@@ -476,6 +562,21 @@ asdf
 # ╔═╡ 0e243fd6-083a-43f7-be51-c928e3c9bb7c
 #=╠═╡
 asdf2
+  ╠═╡ =#
+
+# ╔═╡ 3a3dac6b-5762-4730-a4f0-ca3c0d7cb30a
+#=╠═╡
+xx = @bind asdf3 ImageCoordinatePicker(img_url=img_urls[3], default=ClickCoordinate(400, 400, 20, 300), hint=true)
+  ╠═╡ =#
+
+# ╔═╡ 4bb54fe4-ec1c-441d-b7e5-fa6f0f657362
+#=╠═╡
+[xx, xx, xx]
+  ╠═╡ =#
+
+# ╔═╡ 7f23fd5b-e5b4-41ab-be49-4d7eaae628cd
+#=╠═╡
+asdf3
   ╠═╡ =#
 
 # ╔═╡ 9eb0d291-9941-49fc-a367-ddd3df198691
@@ -552,6 +653,9 @@ map(preview_svg, Pointers)
 # ╠═e02d5785-b113-4133-88ea-123e34346693
 # ╠═406455a3-13f4-4736-9aae-0a5a629758cc
 # ╠═0e243fd6-083a-43f7-be51-c928e3c9bb7c
+# ╠═3a3dac6b-5762-4730-a4f0-ca3c0d7cb30a
+# ╠═4bb54fe4-ec1c-441d-b7e5-fa6f0f657362
+# ╠═7f23fd5b-e5b4-41ab-be49-4d7eaae628cd
 # ╟─1c798857-386b-4c3c-80d8-d6f18b635629
 # ╠═f3bb33e1-bf93-46c1-862d-8fd42d78b86f
 # ╠═b9c72f75-bb13-46d5-a10a-548818cf82d0
