@@ -213,7 +213,7 @@ begin
 
 		const wrapper = this ?? html`
 			<div class="PlutoImageCoordinatePicker" style='touch-action: none; position: relative; display: flex;'>
-				<img class="PlutoImageCoordinatePicker-image">
+				<img class="PlutoImageCoordinatePicker-image" style="cursor: pointer;">
 				<span class="PlutoImageCoordinatePicker-pointer" style="position: absolute; display: flex; left: 0; top: 0; visibility: hidden; translate: -50% -50%; pointer-events: none;">
 					<img >
 					<margo-knob-label>👈 Move me!</margo-knob-label>
