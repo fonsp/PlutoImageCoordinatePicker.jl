@@ -212,9 +212,9 @@ begin
 		h = @htl("""<script id="hello">
 
 		const wrapper = this ?? html`
-			<div class="PlutoImageCoordinatePicker" style='touch-action: none; position: relative; display: flex;'>
-				<img class="PlutoImageCoordinatePicker-image" style="cursor: pointer;">
-				<span class="PlutoImageCoordinatePicker-pointer" style="position: absolute; display: flex; left: 0; top: 0; visibility: hidden; translate: -50% -50%; pointer-events: none;">
+			<div class="PlutoImageCoordinatePicker">
+				<img class="PlutoImageCoordinatePicker-image">
+				<span class="PlutoImageCoordinatePicker-pointer">
 					<img >
 					<margo-knob-label>👈 Move me!</margo-knob-label>
 				</span>
@@ -385,6 +385,30 @@ begin
 		}
 		return wrapper
 		</script><style>
+		
+		.PlutoImageCoordinatePicker {
+			touch-action: none;
+			user-select: none;
+			-webkit-user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
+			position: relative;
+			display: flex;
+		}
+
+		.PlutoImageCoordinatePicker-image {
+			pointer-events: none;
+		}
+			
+		.PlutoImageCoordinatePicker-pointer {
+			position: absolute; 
+			display: flex; 
+			left: 0; 
+			top: 0; 
+			visibility: hidden; 
+			translate: -50% -50%; 
+			pointer-events: none;
+		}
 				
 		margo-knob-label {
 			transform: translate(32px, calc(20% - 1em));
